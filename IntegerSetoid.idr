@@ -4,7 +4,7 @@ import Setoid
 
 data CustomInt = MkCustomInt Nat Nat
 
-data CustomIntEq : (x : CustomInt) -> (y : CustomInt) -> Type where
+data CustomIntEq : CustomInt -> CustomInt -> Type where
   MkCustomIntEq : {a : Nat} -> {b : Nat} -> {c : Nat} -> {d : Nat}
     -> (eq : a + d = c + b) -> CustomIntEq (MkCustomInt a b) (MkCustomInt c d)
 
@@ -21,11 +21,6 @@ eqAdditionRefl eq1 eq2 = rewrite eq1 in rewrite eq2 in Refl
 customIntTrans : Trans CustomIntEq
 customIntTrans (MkCustomInt a b) (MkCustomInt c d) (MkCustomInt e f)
   (MkCustomIntEq eq1) (MkCustomIntEq eq2) = let
-  pc = plusCommutative
-  pa = plusAssociative
-  t = trans
-  s = sym
-  prc = plusRightCancel
   eq3 = eqAdditionRefl eq1 eq2
   eliminateD1 = plusCommutative (a + d) (c + f)
   eliminateD2 = plusAssociative (c + f) a d
@@ -38,4 +33,7 @@ customIntTrans (MkCustomInt a b) (MkCustomInt c d) (MkCustomInt e f)
   eliminateC4 = plusLeftCancel c (f + a) (b + e) eliminateC3
   eliminateC5 = trans eliminateC4 $ plusCommutative b e
   eliminateC6 = trans (plusCommutative a f) eliminateC5
-  in ?fa
+  in MkCustomIntEq eliminateC6
+
+CustomIntSetoid : Setoid
+CustomIntSetoid = MkSetoid CustomInt CustomIntEq $ EqProof CustomIntEq customIntReflx customIntSym customIntTrans
