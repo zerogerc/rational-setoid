@@ -1,5 +1,6 @@
 module IntegerSetoid
 import Setoid
+
 %access public export
 
 data CustomInt = MkCustomInt Nat Nat
@@ -21,6 +22,10 @@ implementation Neg CustomInt where
     if a > b
       then (MkCustomInt a b)
       else (MkCustomInt b a)
+
+--For rational setoid we need mult
+intMultNat : CustomInt -> Nat -> CustomInt
+intMultNat (MkCustomInt a b) c = MkCustomInt (a * c) (b * c)
 
 data CustomIntEq : CustomInt -> CustomInt -> Type where
   MkCustomIntEq : {a : Nat} -> {b : Nat} -> {c : Nat} -> {d : Nat}
