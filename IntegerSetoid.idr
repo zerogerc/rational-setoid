@@ -4,6 +4,24 @@ import Setoid
 
 data CustomInt = MkCustomInt Nat Nat
 
+implementation Num CustomInt where
+  (+) (MkCustomInt a b) (MkCustomInt c d) = MkCustomInt (a + c) (b + d)
+
+  (*) (MkCustomInt a b) (MkCustomInt c d) = MkCustomInt (a * c + b * d) (a * d + b * c)
+
+  fromInteger n =
+    if n > 0
+      then MkCustomInt (fromInteger n) Z
+      else MkCustomInt Z (fromInteger $ abs n)
+
+implementation Neg CustomInt where
+  negate (MkCustomInt a b) = MkCustomInt b a
+  (-) (MkCustomInt a b) (MkCustomInt c d) = MkCustomInt (a + d) (b + c)
+  abs (MkCustomInt a b) =
+    if a > b
+      then (MkCustomInt a b)
+      else (MkCustomInt b a)
+
 data CustomIntEq : CustomInt -> CustomInt -> Type where
   MkCustomIntEq : {a : Nat} -> {b : Nat} -> {c : Nat} -> {d : Nat}
     -> (eq : a + d = c + b) -> CustomIntEq (MkCustomInt a b) (MkCustomInt c d)
