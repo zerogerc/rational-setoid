@@ -2,25 +2,23 @@ module Setoid
 
 %access public export
 
--- R рефлексивно, если для любого (x : A) мы можем создать (R x x)
-Reflx : {A : Type} -> (R : A -> A -> Type) -> Type
-Reflx {A} R = (x : A) -> R x x
+infix 5 :=:
+interface Setoid Carrier where
+  (:=:) : (a, b : Carrier) -> Type
+  Reflx : (a : Carrier) -> a :=: a
+  Sym : (a, b : Carrier) -> a :=: b -> b :=: a
+  Trans : (a, b, c : Carrier) -> a :=: b -> b :=: c -> a :=: c
 
--- R симметрично, если из (R x y) мы можем создать (R y x)
-Sym : {A : Type} -> (R : A -> A -> Type) -> Type
-Sym {A} R = (x : A) -> (y : A) -> R x y -> R y x
 
--- R транзитивно, если из (R x y) и (R y z) мы можем создать (R x z)
-Trans : {A : Type} -> (R : A -> A -> Type) -> Type
-Trans {A} R = (x : A) -> (y : A) -> (z : A) -> R x y -> R y z -> R x z
-
--- Отношение эквивалентности -- это рефлексивное, симметричное и транзитивное отношение
-data IsEquivalence : {A : Type} -> (R : A -> A -> Type) -> Type where
-    EqProof : {A : Type} -> (R : A -> A -> Type) -> Reflx {A} R -> Sym {A} R -> Trans {A} R -> IsEquivalence {A} R
-
--- Сетоид -- это множество с заданым на ним отношением эквивалентности
-record Setoid where
-    constructor MkSetoid
-    Carrier : Type
-    Equiv : Carrier -> Carrier -> Type
-    EquivProof : IsEquivalence Equiv
+interface (Setoid Carrier, Num Carrier, Neg Carrier) => Ring Carrier where
+  PlusComm : (a, b : Carrier) -> (a + b :=: b + a)
+  PlusAssoc : (a, b, c : Carrier) -> a + (b + c) :=: a + b + c
+  Zero : Carrier
+  ZeroNeutral : (a : Carrier) -> a + Zero :=: a
+  NegateEx : (a : Carrier) -> a + (negate a) :=: Zero
+  MultComm : (a, b : Carrier) -> (a * b :=: b * a)
+  MultAssoc : (a, b, c : Carrier) -> a * (b * c) :=: a * b * c
+  MultDistrLeft : (a, b, c : Carrier) -> a * (b + c) :=: (a * b) + (a * c)
+  MultDistrRight : (a, b, c : Carrier) -> (a + b) * c :=: (a * c) + (b * c)
+  One : Carrier
+  OneNeutral : (a : Carrier) -> a * One :=: a

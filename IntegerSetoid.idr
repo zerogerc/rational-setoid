@@ -3,7 +3,10 @@ import Setoid
 
 %access public export
 
-data CustomInt = MkCustomInt Nat Nat
+record CustomInt where
+    constructor MkCustomInt
+    first : Nat
+    second : Nat
 
 implementation Num CustomInt where
   (+) (MkCustomInt a b) (MkCustomInt c d) = MkCustomInt (a + c) (b + d)
@@ -23,27 +26,17 @@ implementation Neg CustomInt where
       then (MkCustomInt a b)
       else (MkCustomInt b a)
 
---For rational setoid we need mult
-intMultNat : CustomInt -> Nat -> CustomInt
-intMultNat (MkCustomInt a b) c = MkCustomInt (a * c) (b * c)
 
 data CustomIntEq : CustomInt -> CustomInt -> Type where
-  MkCustomIntEq : {a : Nat} -> {b : Nat} -> {c : Nat} -> {d : Nat}
-    -> (eq : a + d = c + b) -> CustomIntEq (MkCustomInt a b) (MkCustomInt c d)
-
-customIntReflx : Reflx CustomIntEq
-customIntReflx (MkCustomInt a b) = MkCustomIntEq Refl
-
-customIntSym : Sym CustomIntEq
-customIntSym (MkCustomInt a b) (MkCustomInt c d) (MkCustomIntEq eq) =
-  MkCustomIntEq $ sym eq
+    MkCustomIntEq : {x : CustomInt} -> {y : CustomInt}
+      -> {eq : (first x) + (second y) = (first y) + (second x)}
+      -> CustomIntEq x y
 
 eqAdditionRefl : {a : Nat} -> {b : Nat} -> {c : Nat} -> {d : Nat} -> (a = b) -> (c = d) -> (a + c = b + d)
 eqAdditionRefl eq1 eq2 = rewrite eq1 in rewrite eq2 in Refl
 
-customIntTrans : Trans CustomIntEq
-customIntTrans (MkCustomInt a b) (MkCustomInt c d) (MkCustomInt e f)
-  (MkCustomIntEq eq1) (MkCustomIntEq eq2) = let
+customIntTrans : {a, b, c, d, e, f : Nat} -> (a + d = c + b) -> (c + f = e + d) -> (a + f = e + b)
+customIntTrans {a} {b} {c} {d} {e} {f} eq1 eq2 = let
   eq3 = eqAdditionRefl eq1 eq2
   eliminateD1 = plusCommutative (a + d) (c + f)
   eliminateD2 = plusAssociative (c + f) a d
@@ -56,7 +49,10 @@ customIntTrans (MkCustomInt a b) (MkCustomInt c d) (MkCustomInt e f)
   eliminateC4 = plusLeftCancel c (f + a) (b + e) eliminateC3
   eliminateC5 = trans eliminateC4 $ plusCommutative b e
   eliminateC6 = trans (plusCommutative a f) eliminateC5
-  in MkCustomIntEq eliminateC6
+  in eliminateC6
 
-CustomIntSetoid : Setoid
-CustomIntSetoid = MkSetoid CustomInt CustomIntEq $ EqProof CustomIntEq customIntReflx customIntSym customIntTrans
+implementation Setoid CustomInt where
+  (:=:) = CustomIntEq
+  Reflx a = MkCustomIntEq {eq = Refl}
+  Sym a b ( MkCustomIntEq {eq = abEq} ) = MkCustomIntEq {eq = sym abEq}
+  Trans a b c (MkCustomIntEq {eq=eq1}) (MkCustomIntEq {eq=eq2}) = MkCustomIntEq {eq=customIntTrans eq1 eq2}
